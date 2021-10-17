@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSessionResponse, Verification } from './dto/veriff';
-import { createServiceClient } from 'src/utils/client/got.service';
+import { CreateSessionResponse } from './dto/create-session-response.dto';
+import { createServiceClient } from '../utils/client/got.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import crypto from 'crypto';
-import { User } from 'src/users/interfaces/user.interface';
+import { User } from '../users/interfaces/user.interface';
 import { KycVerificationDto } from './dto/kyc-verification.dto';
 import { Kyc } from './interfaces/kyc.interface';
+import { DecisionResponse } from './dto/decision-response.dto';
 
 @Injectable()
 export class KycService {
@@ -26,28 +27,10 @@ export class KycService {
   }
 
   async startVerification(kycVerificationDto: KycVerificationDto) {
-    // Flow
-    // First we signup with email and password
-    // User will verify email
-    // Kyc inputs for verification (validate the inputs)
-    // User goes to veriff url
-    // User does whatever verification inside veriff
-    // Veriff uses callback url to send user back to our app
-    // Now we check decision for login (pass is login to wallet, fail is 401 error)
-
-    // save session id, and session token, status
-
-    // create update balance for user
-
-    // 2 routes for wallet: 
-    //  1 is to check balance, getRoute 1 param: userId, network, accessToken
-    //  2 is to import wallet from some external api, postRoute, body: accessToken, exchange
     const user = await this.userModel.findOne({
       _id: kycVerificationDto.userId,
       verified: true,
     });
-
-    console.log(kycVerificationDto);
 
     const body = {
       verification: {
@@ -120,12 +103,12 @@ export class KycService {
       headers,
     };
 
-    const decision = await this.client<CreateSessionResponse>(
+    const decision = await this.client<DecisionResponse>(
       'get',
       `sessions/${kyc.sessionId}/decision`,
       options,
     );
-    console.log({decision})
-    return decision.verification;
+
+    return { kycUrl: kyc.url, decision: decision.verification };
   }
 }

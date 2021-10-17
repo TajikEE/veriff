@@ -1,4 +1,4 @@
-import { User } from 'src/users/interfaces/user.interface';
+import { User } from '../../users/interfaces/user.interface';
 import { Document } from 'mongoose';
 export interface RefreshToken extends Document {
   userId: User;

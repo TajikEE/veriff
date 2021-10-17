@@ -5,7 +5,6 @@ import {
   Get,
   Post,
   Body,
-  UseGuards,
   Req,
   HttpCode,
   HttpStatus,
@@ -14,21 +13,18 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { VerifyUserDto } from './dto/verify-user.dto';
 import { UsersService } from './users.service';
-import { AuthGuard, PassportModule } from '@nestjs/passport';
 import { RefreshAccessTokenDto } from './dto/refresh-access-token.dto';
 
 @Controller('user')
-export class UserController {
+export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
-  // authenticate
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() createUserDto: CreateUserDto) {
     return await this.userService.create(createUserDto);
   }
 
-  // make it get and send route params
   @Get('verify-email/:verification')
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Param() verifyUuidDto: VerifyUserDto) {
@@ -47,12 +43,5 @@ export class UserController {
     @Body() refreshAccessTokenDto: RefreshAccessTokenDto,
   ) {
     return await this.userService.refreshAccessToken(refreshAccessTokenDto);
-  }
-
-  @Get('data')
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.OK)
-  findAll() {
-    return this.userService.findAll();
   }
 }

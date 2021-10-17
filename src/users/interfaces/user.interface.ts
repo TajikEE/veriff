@@ -8,6 +8,7 @@ export interface User extends Document {
   password: number;
   verification: string;
   verified: boolean;
+  verifiedAge: boolean;
   verificationExpires: Date;
   loginAttempts?: number;
   blockExpires?: Date;

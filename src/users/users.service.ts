@@ -17,13 +17,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { VerifyUserDto } from './dto/verify-user.dto';
 import { RefreshAccessTokenDto } from './dto/refresh-access-token.dto';
 import { User } from './interfaces/user.interface';
-import { KycService } from 'src/kyc/kyc.service';
+import { KycService } from '../kyc/kyc.service';
 import { ApiResponse, apiResponse } from '../utils/api-response';
 @Injectable()
 export class UsersService {
   HOURS_TO_VERIFY = 4;
   HOURS_TO_BLOCK = 6;
   LOGIN_ATTEMPTS_TO_BLOCK = 5;
+  MIN_AGE_LIMIT = 18;
 
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
@@ -49,25 +50,32 @@ export class UsersService {
 
   async login(req: Request, loginUserDto: LoginUserDto) {
     const user = await this.findUserByEmail(loginUserDto.email);
-
-    const decision = await this.kycService.getDecision(user._id);
-
-    if (decision === null) {
-      return apiResponse(false, 'send veriff url', 'Verification pending');
-    }
-    console.log(decision);
-
     this.isUserBlocked(user);
+
+    if (user.verifiedAge === false) {
+      const { kycUrl, decision } = await this.kycService.getDecision(user._id);
+
+      if (decision === null) {
+        return apiResponse(false, kycUrl, 'Verification pending');
+      }
+
+      if (decision.person?.dateOfBirth >= this.MIN_AGE_LIMIT) {
+        user.verifiedAge = true;
+        user.save();
+      }
+    }
+
     await this.checkPassword(loginUserDto.password, user);
     await this.passwordsAreMatch(user);
-    return {
+
+    return apiResponse(true, {
       name: user.name,
       email: user.email,
       accessToken: await this.authService.createAccessToken(
         user._id.toString(),
       ),
       refreshToken: await this.authService.createRefreshToken(req, user._id),
-    };
+    });
   }
 
   async refreshAccessToken(refreshAccessTokenDto: RefreshAccessTokenDto) {
@@ -87,11 +95,6 @@ export class UsersService {
         user._id.toString(),
       ),
     });
-  }
-
-  // Protected service
-  findAll(): any {
-    return { hello: 'world' };
   }
 
   // private methods

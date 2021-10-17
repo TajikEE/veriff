@@ -28,6 +28,10 @@ export const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verifiedAge: {
+      type: Boolean,
+      default: false,
+    },
     verificationExpires: {
       type: Date,
       default: Date.now,

@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { KycModule } from './kyc/kyc.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { KycModule } from './kyc/kyc.module';
     UsersModule,
     AuthModule,
     KycModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [AppService],

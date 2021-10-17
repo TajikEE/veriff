@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { sign } from 'jsonwebtoken';
-import { User } from 'src/users/interfaces/user.interface';
+import { User } from '../users/interfaces/user.interface';
 import { RefreshToken } from './interfaces/refresh-token.interface';
 import { v4 } from 'uuid';
 import { Request } from 'express';
@@ -19,17 +19,18 @@ import Cryptr from 'cryptr';
 @Injectable()
 export class AuthService {
   cryptr: any;
+  ENCRYPT_JWT_SECRET = process.env.ENCRYPT_JWT_SECRET || 'secret';
 
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
     @InjectModel('RefreshToken')
     private readonly refreshTokenModel: Model<RefreshToken>,
   ) {
-    this.cryptr = new Cryptr(process.env.ENCRYPT_JWT_SECRET);
+    this.cryptr = new Cryptr(this.ENCRYPT_JWT_SECRET);
   }
 
   async createAccessToken(userId: string) {
-    const accessToken = sign({ userId }, process.env.JWT_SECRET, {
+    const accessToken = sign({ userId }, this.ENCRYPT_JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRATION,
     });
     return this.encryptText(accessToken);
@@ -68,9 +69,6 @@ export class AuthService {
     return user;
   }
 
-  //   ┬┬ ┬┌┬┐  ┌─┐─┐ ┬┌┬┐┬─┐┌─┐┌─┐┌┬┐┌─┐┬─┐
-  //   ││││ │   ├┤ ┌┴┬┘ │ ├┬┘├─┤│   │ │ │├┬┘
-  //  └┘└┴┘ ┴   └─┘┴ └─ ┴ ┴└─┴ ┴└─┘ ┴ └─┘┴└─
   private jwtExtractor(request) {
     let token = null;
     if (request.header('x-token')) {
@@ -85,7 +83,7 @@ export class AuthService {
     if (request.query.token) {
       token = request.body.token.replace(' ', '');
     }
-    const cryptr = new Cryptr(process.env.ENCRYPT_JWT_SECRET);
+    const cryptr = new Cryptr(this.ENCRYPT_JWT_SECRET);
     if (token) {
       try {
         token = cryptr.decrypt(token);
@@ -96,11 +94,6 @@ export class AuthService {
     return token;
   }
 
-  // ***********************
-  // ╔╦╗╔═╗╔╦╗╦ ╦╔═╗╔╦╗╔═╗
-  // ║║║║╣  ║ ╠═╣║ ║ ║║╚═╗
-  // ╩ ╩╚═╝ ╩ ╩ ╩╚═╝═╩╝╚═╝
-  // ***********************
   returnJwtExtractor() {
     return this.jwtExtractor;
   }
