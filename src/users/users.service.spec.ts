@@ -85,7 +85,7 @@ describe('UsersService', () => {
     expect(usersService).toBeDefined();
   });
 
-  it('should spy onasdasd email', async () => {
+  it('should verify email', async () => {
     const VerifyUserDto = {
       verification: '5fec8ab5-f883-4e39-850f-2c0afffd1b12',
     };
@@ -95,7 +95,7 @@ describe('UsersService', () => {
       data: { userId: '6164680035249fb93e8feef0', verified: true },
     };
     const findByVerification = jest.spyOn(usersService, 'findByVerification');
-    // jest.spyOn(UserModel, 'findOne').mockReturnValue(Promise.resolve(user));
+
     expect(await usersService.verifyEmail(VerifyUserDto)).toEqual(apiResponse);
 
     expect(findByVerification).toHaveBeenCalledTimes(1);

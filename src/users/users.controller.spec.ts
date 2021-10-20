@@ -33,9 +33,17 @@ describe('Users controller', () => {
       email: 'asd@asd.com',
       password: 'password123',
     };
-    jest.spyOn(usersService, 'create').mockResolvedValue({ success: true });
+    jest.spyOn(usersService, 'create').mockResolvedValue({
+      success: true,
+      data: {
+        verification: '2592a105-d0d3-4593-a11d-06cef1a76ac',
+      },
+    });
     expect(await usersController.register(createUserDto)).toEqual({
       success: true,
+      data: {
+        verification: '2592a105-d0d3-4593-a11d-06cef1a76ac',
+      },
     });
   });
 

@@ -39,7 +39,9 @@ export class UsersService {
     this.setVerificationInfo(user);
     await user.save();
 
-    return apiResponse(true);
+    // In real life the verification would not be sent as response, but instead some email service
+    // would be used and the user would click on the email link to verify, this is for easier testing only
+    return apiResponse(true, { verification: user.verification });
   }
 
   async verifyEmail(verifyUserDto: VerifyUserDto): Promise<ApiResponse> {
@@ -61,7 +63,7 @@ export class UsersService {
         decisionVerification === null ||
         decisionVerification.code !== this.PERSON_VERIFIED
       ) {
-        return apiResponse(false, kycUrl, 'Verification not completed');
+        return apiResponse(false, { kycUrl }, 'Verification not completed');
       }
 
       if (
