@@ -25,6 +25,7 @@ export class UsersService {
   HOURS_TO_BLOCK = 6;
   LOGIN_ATTEMPTS_TO_BLOCK = 5;
   MIN_AGE_LIMIT = 18;
+  PERSON_VERIFIED = 9001;
 
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
@@ -56,11 +57,17 @@ export class UsersService {
       const { kycUrl, decisionVerification } =
         await this.kycService.getDecision(user._id);
 
-      if (decisionVerification === null) {
-        return apiResponse(false, kycUrl, 'Verification pending');
+      if (
+        decisionVerification === null ||
+        decisionVerification.code !== this.PERSON_VERIFIED
+      ) {
+        return apiResponse(false, kycUrl, 'Verification not completed');
       }
 
-      if (decisionVerification.person?.dateOfBirth >= this.MIN_AGE_LIMIT) {
+      if (
+        decisionVerification.person?.dateOfBirth >= this.MIN_AGE_LIMIT &&
+        decisionVerification.code === this.PERSON_VERIFIED
+      ) {
         user.verifiedAge = true;
         user.save();
       }
