@@ -13,6 +13,7 @@ import { KycVerificationDto } from './dto/kyc-verification.dto';
 import { Kyc } from './interfaces/kyc.interface';
 import { DecisionResponse } from './dto/decision-response.dto';
 import { ApiResponse, apiResponse } from '../utils/api-response';
+import { ENVIRONMENT } from '../utils/environment.constants';
 
 const VERIFF_BASE_URL = 'https://stationapi.veriff.com/v1/';
 @Injectable()
@@ -46,7 +47,7 @@ export class KycService {
 
     const body = {
       verification: {
-        callback: `${process.env.APP_URL}/login`,
+        callback: `${ENVIRONMENT.APP_URL}/login`,
         person: {
           firstName: user.name.split(' ')[0],
           lastName: user.name.split(' ')[1] || '',
@@ -64,10 +65,10 @@ export class KycService {
 
     const headers = {
       'Content-Type': 'application/json',
-      'X-AUTH-CLIENT': process.env.VERIFF_API_PUBLIC_KEY,
+      'X-AUTH-CLIENT': ENVIRONMENT.VERIFF_API_PUBLIC_KEY,
     };
 
-    console.log('asdasd', body)
+    console.log('asdasd', body);
     const options = {
       headers,
       body,
@@ -109,12 +110,12 @@ export class KycService {
 
     const xHmacSignature = this.generateSignature(
       kyc.sessionId,
-      process.env.VERIFF_API_PRIVATE_KEY,
+      ENVIRONMENT.VERIFF_API_PRIVATE_KEY,
     );
 
     const headers = {
       'Content-Type': 'application/json',
-      'X-AUTH-CLIENT': process.env.VERIFF_API_PUBLIC_KEY,
+      'X-AUTH-CLIENT': ENVIRONMENT.VERIFF_API_PUBLIC_KEY,
       'X-HMAC-SIGNATURE': xHmacSignature,
     };
 
