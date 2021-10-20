@@ -9,12 +9,12 @@ The kyc module has the veriff integration logic, which is used to verify the age
 The app has also been deployed to aws apprunner. This is the url: https://tpibaq33xi.eu-west-1.awsapprunner.com/. The routes can be checked using this url in some API client like postman.
 
 The environment variables can be provided on request. Here are the list of environment variables:
-MONGO_PASSWORD
-MONGO_USER
-JWT_SECRET
-VERIFF_API_PRIVATE_KEY
-VERIFF_API_PUBLIC_KEY
-APP_URL
+-MONGO_PASSWORD
+-MONGO_USER
+-JWT_SECRET
+-VERIFF_API_PRIVATE_KEY
+-VERIFF_API_PUBLIC_KEY
+-APP_URL
 
 
 ## Installation

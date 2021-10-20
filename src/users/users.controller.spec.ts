@@ -27,7 +27,7 @@ describe('Users controller', () => {
     expect(usersController).toBeDefined();
   });
 
-  it('should return create a new user', async () => {
+  it('should create a new user', async () => {
     const createUserDto = {
       name: 'asd',
       email: 'asd@asd.com',

@@ -40,12 +40,16 @@ export class KycService {
       verified: true,
     });
 
+    if (!user) {
+      throw new NotFoundException('User does not exist.');
+    }
+
     const body = {
       verification: {
         callback: `${process.env.APP_URL}/login`,
         person: {
           firstName: user.name.split(' ')[0],
-          lastName: user.name.split(' ')[1],
+          lastName: user.name.split(' ')[1] || '',
           idNumber: kycVerificationDto.idNumber,
           dateOfBirth: kycVerificationDto.dateOfBirth,
         },
@@ -63,6 +67,7 @@ export class KycService {
       'X-AUTH-CLIENT': process.env.VERIFF_API_PUBLIC_KEY,
     };
 
+    console.log('asdasd', body)
     const options = {
       headers,
       body,
