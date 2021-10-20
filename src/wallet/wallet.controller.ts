@@ -17,14 +17,14 @@ import { WalletService } from './wallet.service';
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
-  @Get('/:userId')
+  @Get(':userId')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async checkBalance(@Param() getBalanceDto: GetBalanceDto) {
     return await this.walletService.getBalance(getBalanceDto);
   }
 
-  @Post('/import')
+  @Post('import')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async importWallet(@Body() importWalletDto: ImportWalletDto) {

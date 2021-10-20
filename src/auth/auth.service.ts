@@ -8,32 +8,26 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { sign } from 'jsonwebtoken';
 import { User } from '../users/interfaces/user.interface';
 import { RefreshToken } from './interfaces/refresh-token.interface';
 import { v4 } from 'uuid';
 import { Request } from 'express';
 import { getClientIp } from 'request-ip';
-import Cryptr from 'cryptr';
 
 @Injectable()
 export class AuthService {
-  cryptr: any;
-  ENCRYPT_JWT_SECRET = process.env.ENCRYPT_JWT_SECRET || 'secret';
 
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
     @InjectModel('RefreshToken')
     private readonly refreshTokenModel: Model<RefreshToken>,
-  ) {
-    this.cryptr = new Cryptr(this.ENCRYPT_JWT_SECRET);
-  }
+    private readonly jwtService: JwtService,
+  ) {}
 
   async createAccessToken(userId: string) {
-    const accessToken = sign({ userId }, this.ENCRYPT_JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRATION,
-    });
-    return this.encryptText(accessToken);
+    const accessToken = this.jwtService.sign({ userId });
+
+    return accessToken;
   }
 
   async createRefreshToken(req: Request, userId) {
@@ -63,39 +57,11 @@ export class AuthService {
       _id: jwtPayload.userId,
       verified: true,
     });
+
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
     return user;
-  }
-
-  private jwtExtractor(request) {
-    let token = null;
-    if (request.header('x-token')) {
-      token = request.get('x-token');
-    } else if (request.headers.authorization) {
-      token = request.headers.authorization
-        .replace('Bearer ', '')
-        .replace(' ', '');
-    } else if (request.body.token) {
-      token = request.body.token.replace(' ', '');
-    }
-    if (request.query.token) {
-      token = request.body.token.replace(' ', '');
-    }
-    const cryptr = new Cryptr(this.ENCRYPT_JWT_SECRET);
-    if (token) {
-      try {
-        token = cryptr.decrypt(token);
-      } catch (err) {
-        throw new BadRequestException('Bad request.');
-      }
-    }
-    return token;
-  }
-
-  returnJwtExtractor() {
-    return this.jwtExtractor;
   }
 
   getIp(req: Request): string {
@@ -108,9 +74,5 @@ export class AuthService {
 
   getCountry(req: Request): string {
     return req.header['cf-ipcountry'] ? req.header['cf-ipcountry'] : 'XX';
-  }
-
-  encryptText(text: string): string {
-    return this.cryptr.encrypt(text);
   }
 }

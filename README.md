@@ -1,21 +1,22 @@
 ## Description
 
- // Flow
-    // First we signup with email and password
-    // User will verify email
-    // Kyc inputs for verification (validate the inputs)
-    // User goes to veriff url
-    // User does whatever verification inside veriff
-    // Veriff uses callback url to send user back to our app
-    // Now we check decision for login (pass is login to wallet, fail is 401 error)
+The project acts like a crypto wallet service with user authentication.
 
-    // save session id, and session token, status
+It has different modules separated by business logic.
 
-    // create update balance for user
+The kyc module has the veriff integration logic, which is used to verify the age of a user. Based on the age, a user is allowed to login to the platform.
 
-    // 2 routes for wallet:
-    //  1 is to check balance, getRoute 1 param: userId, network, accessToken
-    //  2 is to import wallet from some external api, postRoute, body: accessToken, exchange
+The app has also been deployed to aws apprunner. This is the url: https://tpibaq33xi.eu-west-1.awsapprunner.com/. The routes can be checked using this url in some API client like postman.
+
+The environment variables can be provided on request. Here are the list of environment variables:
+MONGO_PASSWORD
+MONGO_USER
+JWT_SECRET
+JWT_EXPIRATION
+VERIFF_API_PRIVATE_KEY
+VERIFF_API_PUBLIC_KEY
+APP_URL
+
 
 ## Installation
 

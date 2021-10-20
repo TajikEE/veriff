@@ -36,7 +36,7 @@ describe('Users controller', () => {
       password: 'password123',
     };
     jest.spyOn(usersService, 'create').mockResolvedValue({ success: true });
-    expect(await usersController.register(createUserDto)).toBe({
+    expect(await usersController.register(createUserDto)).toEqual({
       success: true,
     });
   });
@@ -50,6 +50,7 @@ describe('Users controller', () => {
       success: true,
       data: { userId: '626a73c4f88bcae2304ab00a', verified: true },
     };
+
     jest.spyOn(usersService, 'verifyEmail').mockResolvedValue(apiResponse);
     expect(await usersController.verifyEmail(VerifyUserDto)).toBe(apiResponse);
   });

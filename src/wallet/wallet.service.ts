@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Wallet } from './interfaces/wallet.interface';
-import { apiResponse } from '../utils/api-response';
+import { ApiResponse, apiResponse } from '../utils/api-response';
 import { GetBalanceDto } from './dto/get-balance.dto';
 import { ImportWalletDto } from './dto/import-wallet.dto';
 
@@ -12,7 +12,7 @@ export class WalletService {
     @InjectModel('Wallet') private readonly walletModel: Model<Wallet>,
   ) {}
 
-  async getBalance(getBalanceDto: GetBalanceDto) {
+  async getBalance(getBalanceDto: GetBalanceDto): Promise<ApiResponse> {
     const wallet = await this.walletModel.findOne({
       userId: getBalanceDto.userId,
     });
@@ -24,13 +24,13 @@ export class WalletService {
     return apiResponse(true, { wallet });
   }
 
-  async importWallet(importWalletDto: ImportWalletDto) {
-    const walletData = await this.fakeCryptoService(
+  async importWallet(importWalletDto: ImportWalletDto): Promise<ApiResponse> {
+    const walletData: any = await this.fakeCryptoService(
       importWalletDto.accessToken,
       importWalletDto.exchange,
     );
 
-    const existingWallet = await this.walletModel.findOne({
+    const existingWallet: Wallet = await this.walletModel.findOne({
       userId: importWalletDto.userId,
     });
 
@@ -53,12 +53,18 @@ export class WalletService {
     return apiResponse(true, { wallet: importedWallet });
   }
 
-  fakeCryptoService(accessToken, exchange) {
+  fakeCryptoService(accessToken: string, exchange: string) {
     // assume it makes request to some external api with accessToken and exchange
-    return {
-      exchange: 'binance',
-      balance: Math.floor(Math.random() * 99) + 1,
-      network: 'ethereum',
-    };
+    const importedWallet = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({
+          exchange: 'binance',
+          balance: Math.floor(Math.random() * 99) + 1,
+          network: 'ethereum',
+        });
+      }, 500);
+    });
+
+    return importedWallet;
   }
 }

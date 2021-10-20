@@ -41,29 +41,30 @@ export class UsersService {
     return apiResponse(true);
   }
 
-  async verifyEmail(verifyUserDto: VerifyUserDto) {
+  async verifyEmail(verifyUserDto: VerifyUserDto): Promise<ApiResponse> {
     const user = await this.findByVerification(verifyUserDto.verification);
     await this.setUserAsVerified(user);
 
     return apiResponse(true, { userId: user._id, verified: user.verified });
   }
 
-  async login(req: Request, loginUserDto: LoginUserDto) {
+  async login(req: Request, loginUserDto: LoginUserDto): Promise<ApiResponse> {
     const user = await this.findUserByEmail(loginUserDto.email);
     this.isUserBlocked(user);
 
-    if (user.verifiedAge === false) {
-      const { kycUrl, decision } = await this.kycService.getDecision(user._id);
+    // if (user.verifiedAge === false) {
+    //   const { kycUrl, decisionVerification } =
+    //     await this.kycService.getDecision(user._id);
 
-      if (decision === null) {
-        return apiResponse(false, kycUrl, 'Verification pending');
-      }
+    //   if (decisionVerification === null) {
+    //     return apiResponse(false, kycUrl, 'Verification pending');
+    //   }
 
-      if (decision.person?.dateOfBirth >= this.MIN_AGE_LIMIT) {
-        user.verifiedAge = true;
-        user.save();
-      }
-    }
+    //   if (decisionVerification.person?.dateOfBirth >= this.MIN_AGE_LIMIT) {
+    //     user.verifiedAge = true;
+    //     user.save();
+    //   }
+    // }
 
     await this.checkPassword(loginUserDto.password, user);
     await this.passwordsAreMatch(user);
@@ -78,7 +79,9 @@ export class UsersService {
     });
   }
 
-  async refreshAccessToken(refreshAccessTokenDto: RefreshAccessTokenDto) {
+  async refreshAccessToken(
+    refreshAccessTokenDto: RefreshAccessTokenDto,
+  ): Promise<ApiResponse> {
     const userId = await this.authService.findRefreshToken(
       refreshAccessTokenDto.refreshToken,
     );
@@ -97,29 +100,30 @@ export class UsersService {
     });
   }
 
+  async findByVerification(verification: string): Promise<User> {
+    const user = await this.userModel.findOne({
+      verification,
+      verified: false,
+      verificationExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Bad request.');
+    }
+    return user;
+  }
+
   // private methods
   private async isEmailUnique(email: string) {
     const user = await this.userModel.findOne({ email, verified: true });
     if (user) {
-      throw new BadRequestException('Email most be unique.');
+      throw new BadRequestException('Email must be unique.');
     }
   }
 
   private setVerificationInfo(user): any {
     user.verification = v4();
     user.verificationExpires = addHours(new Date(), this.HOURS_TO_VERIFY);
-  }
-
-  private async findByVerification(verification: string): Promise<User> {
-    const user = await this.userModel.findOne({
-      verification,
-      verified: false,
-      verificationExpires: { $gt: new Date() },
-    });
-    if (!user) {
-      throw new BadRequestException('Bad request.');
-    }
-    return user;
   }
 
   private async setUserAsVerified(user) {

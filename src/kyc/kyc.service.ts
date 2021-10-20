@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSessionResponse } from './dto/create-session-response.dto';
 import { createServiceClient } from '../utils/client/got.service';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,7 +12,9 @@ import { User } from '../users/interfaces/user.interface';
 import { KycVerificationDto } from './dto/kyc-verification.dto';
 import { Kyc } from './interfaces/kyc.interface';
 import { DecisionResponse } from './dto/decision-response.dto';
+import { ApiResponse, apiResponse } from '../utils/api-response';
 
+const VERIFF_BASE_URL = 'https://stationapi.veriff.com/v1/';
 @Injectable()
 export class KycService {
   constructor(
@@ -16,9 +22,9 @@ export class KycService {
     @InjectModel('Kyc') private readonly kycModel: Model<Kyc>,
   ) {}
 
-  client = createServiceClient('https://stationapi.veriff.com/v1/');
+  client = createServiceClient(VERIFF_BASE_URL);
 
-  generateSignature(payload, secret) {
+  generateSignature(payload: string, secret: string) {
     return crypto
       .createHmac('sha256', secret)
       .update(Buffer.from(payload, 'utf8'))
@@ -26,7 +32,9 @@ export class KycService {
       .toLowerCase();
   }
 
-  async startVerification(kycVerificationDto: KycVerificationDto) {
+  async startVerification(
+    kycVerificationDto: KycVerificationDto,
+  ): Promise<ApiResponse> {
     const user = await this.userModel.findOne({
       _id: kycVerificationDto.userId,
       verified: true,
@@ -34,8 +42,7 @@ export class KycService {
 
     const body = {
       verification: {
-        // redirect to my own domain
-        callback: 'https://asd.com/netlify/login',
+        callback: `${process.env.APP_URL}/login`,
         person: {
           firstName: user.name.split(' ')[0],
           lastName: user.name.split(' ')[1],
@@ -61,37 +68,44 @@ export class KycService {
       body,
     };
 
-    const res = await this.client<CreateSessionResponse>(
-      'post',
-      'sessions',
-      options,
-    );
+    try {
+      const res = await this.client<CreateSessionResponse>(
+        'post',
+        'sessions',
+        options,
+      );
 
-    const kyc: Kyc = await this.kycModel.create({
-      userId: kycVerificationDto.userId,
-      sessionId: res.verification.id,
-      url: res.verification.url,
-    });
+      const kyc: Kyc = await this.kycModel.create({
+        userId: kycVerificationDto.userId,
+        sessionId: res.verification.id,
+        url: res.verification.url,
+      });
 
-    console.log(res);
-    console.log({ kyc });
+      return apiResponse(true, { kycUrl: kyc.url });
+    } catch (ex) {
+      throw new BadRequestException('Cannot start verification, try again.');
+    }
   }
 
   timestamp() {
     return new Date().toISOString();
   }
 
-  async getDecision(userId) {
+  async getDecision(
+    userId: Types.ObjectId,
+  ): Promise<{ kycUrl: string; decisionVerification: any }> {
     const kyc: Kyc = await this.kycModel.findOne({
       userId: userId,
     });
+
+    if (!kyc) {
+      throw new NotFoundException('KYC does not exist.');
+    }
 
     const xHmacSignature = this.generateSignature(
       kyc.sessionId,
       process.env.VERIFF_API_PRIVATE_KEY,
     );
-
-    console.log(xHmacSignature);
 
     const headers = {
       'Content-Type': 'application/json',
@@ -103,12 +117,16 @@ export class KycService {
       headers,
     };
 
-    const decision = await this.client<DecisionResponse>(
-      'get',
-      `sessions/${kyc.sessionId}/decision`,
-      options,
-    );
+    try {
+      const decision = await this.client<DecisionResponse>(
+        'get',
+        `sessions/${kyc.sessionId}/decision`,
+        options,
+      );
 
-    return { kycUrl: kyc.url, decision: decision.verification };
+      return { kycUrl: kyc.url, decisionVerification: decision.verification };
+    } catch (ex) {
+      throw new BadRequestException('Cannot get verification decision.');
+    }
   }
 }
