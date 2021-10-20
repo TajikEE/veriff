@@ -12,7 +12,6 @@ The environment variables can be provided on request. Here are the list of envir
 MONGO_PASSWORD
 MONGO_USER
 JWT_SECRET
-JWT_EXPIRATION
 VERIFF_API_PRIVATE_KEY
 VERIFF_API_PUBLIC_KEY
 APP_URL

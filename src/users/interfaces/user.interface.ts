@@ -5,7 +5,7 @@ export interface User extends Document {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  password: number;
+  password: string;
   verification: string;
   verified: boolean;
   verifiedAge: boolean;

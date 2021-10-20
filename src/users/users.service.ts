@@ -49,22 +49,22 @@ export class UsersService {
   }
 
   async login(req: Request, loginUserDto: LoginUserDto): Promise<ApiResponse> {
-    const user = await this.findUserByEmail(loginUserDto.email);
+    const user: User = await this.findUserByEmail(loginUserDto.email);
     this.isUserBlocked(user);
 
-    // if (user.verifiedAge === false) {
-    //   const { kycUrl, decisionVerification } =
-    //     await this.kycService.getDecision(user._id);
+    if (user.verifiedAge === false) {
+      const { kycUrl, decisionVerification } =
+        await this.kycService.getDecision(user._id);
 
-    //   if (decisionVerification === null) {
-    //     return apiResponse(false, kycUrl, 'Verification pending');
-    //   }
+      if (decisionVerification === null) {
+        return apiResponse(false, kycUrl, 'Verification pending');
+      }
 
-    //   if (decisionVerification.person?.dateOfBirth >= this.MIN_AGE_LIMIT) {
-    //     user.verifiedAge = true;
-    //     user.save();
-    //   }
-    // }
+      if (decisionVerification.person?.dateOfBirth >= this.MIN_AGE_LIMIT) {
+        user.verifiedAge = true;
+        user.save();
+      }
+    }
 
     await this.checkPassword(loginUserDto.password, user);
     await this.passwordsAreMatch(user);
@@ -132,7 +132,7 @@ export class UsersService {
   }
 
   private async findUserByEmail(email: string): Promise<User> {
-    const user = await this.userModel.findOne({ email, verified: true });
+    const user: User = await this.userModel.findOne({ email, verified: true });
     if (!user) {
       throw new NotFoundException('Wrong email or password.');
     }

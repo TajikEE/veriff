@@ -11,8 +11,6 @@ describe('Users controller', () => {
   let module: TestingModule;
   let usersController: UsersController;
 
-  // const gameId = new Types.ObjectId('607397e09f43069d7a34f609');
-
   beforeAll(async () => {
     module = await Test.createTestingModule({
       controllers: [UsersController],
